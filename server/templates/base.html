@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link
+        href="https://cdn.jsdelivr.net/npm/@mdi/font@5.9.55/css/materialdesignicons.min.css"
+        rel="stylesheet"
+    />
+    <style>
+        .hide, .hidden {
+            display: none !important;
+        }
+
+        .the-form {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn {
+             width: 100vw;
+            height: 90vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            padding: 1.5rem;
+            position: relative;
+            border: none;
+            font-size: 7rem;
+            text-align: center;
+            transition-duration: 0.4s;
+            text-decoration: none;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .btn:after {
+            content: "";
+            display: block;
+            position: absolute;
+            padding-top: 300%;
+            padding-left: 350%;
+            margin-left: -2rem;
+            margin-top: -120%;
+            opacity: 0;
+            transition: all 0.8s;
+            filter: brightness(500%);
+            background: inherit;
+        }
+
+        .btn:active:after {
+            padding: 0;
+            margin: 0;
+            opacity: 1;
+            transition: 0s;
+        }
+
+        .btn-home, .btn-away {
+            color: #FFFFFF;
+            margin: auto;
+        }
+
+        .btn-home {
+            background: #455A64;
+        }
+
+        .btn-away {
+            background: #E64A19;
+        }
+    </style>
+</head>
+<body>
+
+    <form id='home-form' class='the-form'>
+        <button id='home' class='btn btn-home'>
+            <span class='mdi mdi-home-variant'></span>
+            <span>Home</span>
+        </button>
+        <input
+            type="checkbox"
+            name="home"
+            value="true"
+            checked
+            hidden
+        />
+    </form>
+    <form id="away-form" class="the-form">
+        <button id='busy' class='btn btn-away'>
+            <span class='mdi mdi-home-export-outline'></span>
+            <span>Busy</span>
+        </button>
+        <input
+            type="checkbox"
+            name="away"
+            value="true"
+            checked
+            hidden
+        />
+    </form>
+
+    <script>
+        const API_URL = `http://localhost:5000/api`
+
+        function handleError(err) {
+            console.error(err)
+        }
+
+        function el(qs) {
+            return document.querySelector(qs)
+        }
+
+        function els(qs) {
+            return [...document.querySelectorAll(qs)]
+        }
+
+        const homeForm = el('#home-form')
+        const awayForm = el('#away-form')
+
+        const loadStatus = () => fetch(`${API_URL}/status`)
+            .then(resp => resp.json())
+            .catch(handleError)
+
+        const updateStatus = isHome => {
+            return fetch(`${API_URL}/${isHome ? 'home' : 'away'}`, {method: 'POST'})
+                .then(() => isHome)
+                .catch(handleError)
+        }
+
+        const renderStatus = isHome => {
+            const [show, hide] = isHome
+                ? [awayForm, homeForm]
+                : [homeForm, awayForm]
+            show.classList.remove('hide')
+            hide.classList.add('hide')
+            if (isHome) {
+                console.log('showing away form, hiding home form')
+            } else {
+                console.log('showing home form, hiding away form')
+            }
+            return isHome
+        }
+
+
+        homeForm.addEventListener('submit', event => {
+            event.preventDefault()
+            console.log('home-form submitted')
+            updateStatus(true)
+                .then(renderStatus)
+        })
+
+        awayForm.addEventListener('submit', event => {
+            event.preventDefault()
+            console.log('away-form submitted')
+            updateStatus(false)
+                .then(renderStatus)
+        })
+
+        loadStatus().then(({is_home}) => renderStatus(is_home))
+            .then(console.log)
+
+    </script>
+</body>
+</html>
